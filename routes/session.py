@@ -247,3 +247,113 @@ def session_results(session_id):
             'question_num':e.question_num
         } for e in events]
     }), 200
+
+
+@session_bp.route('/session/audio', methods=['POST'])
+def analyse_audio():
+    """Receive audio chunk from browser, analyse with librosa, return speech scores."""
+    import librosa
+    import numpy as np
+    import soundfile as sf
+    import tempfile, os, base64
+
+    data       = request.get_json()
+    audio_b64  = data.get('audio')
+    session_id = data.get('session_id')
+
+    if not audio_b64:
+        return jsonify({'error': 'No audio data'}), 400
+
+    try:
+        # Decode base64 audio blob sent from browser
+        audio_bytes = base64.b64decode(audio_b64)
+
+        # Write to temp file
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
+            f.write(audio_bytes)
+            tmp_path = f.name
+
+        # Load with librosa
+        y, sr = librosa.load(tmp_path, sr=22050, mono=True)
+        os.unlink(tmp_path)
+
+        if len(y) < 100:
+            return jsonify({'speech_score': 50, 'pace': 'normal', 'energy': 50}), 200
+
+        # ── Feature extraction ──
+        # 1. RMS energy (volume/confidence proxy)
+        rms        = float(np.sqrt(np.mean(y**2)))
+        energy_score = min(100, max(0, int(rms * 2000)))
+
+        # 2. Spectral centroid (brightness — higher = more expressive)
+        centroid   = librosa.feature.spectral_centroid(y=y, sr=sr)
+        avg_cent   = float(np.mean(centroid))
+        expression = min(100, max(0, int(avg_cent / 80)))
+
+        # 3. Zero crossing rate (nervousness proxy — high ZCR = shaky voice)
+        zcr        = librosa.feature.zero_crossing_rate(y)
+        avg_zcr    = float(np.mean(zcr))
+        nervousness= min(100, max(0, int(avg_zcr * 800)))
+
+        # 4. Tempo (speaking pace)
+        tempo, _   = librosa.beat.beat_track(y=y, sr=sr)
+        if tempo < 60:
+            pace = 'slow'
+        elif tempo > 120:
+            pace = 'fast'
+        else:
+            pace = 'normal'
+
+        # 5. Pitch variation (monotone = low variation = nervous/bored)
+        pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+        pitch_vals = pitches[magnitudes > np.median(magnitudes)]
+        pitch_var  = float(np.std(pitch_vals)) if len(pitch_vals) > 0 else 0
+        pitch_score= min(100, max(0, int(pitch_var / 5)))
+
+        # ── Combine into speech score ──
+        speech_score = int(
+            (energy_score  * 0.30) +
+            (expression    * 0.25) +
+            (pitch_score   * 0.25) +
+            ((100 - nervousness) * 0.20)
+        )
+
+        return jsonify({
+            'speech_score': speech_score,
+            'energy':       energy_score,
+            'pace':         pace,
+            'pitch_var':    pitch_score,
+            'nervousness':  nervousness
+        }), 200
+
+    except Exception as e:
+        return jsonify({'speech_score': 50, 'pace': 'normal', 'energy': 50, 'error': str(e)}), 200
+
+
+@session_bp.route('/api/sessions/history', methods=['GET'])
+def session_history():
+    """Return all past sessions for the logged-in user."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    sessions = InterviewSession.query\
+        .filter_by(user_id=user_id)\
+        .order_by(InterviewSession.started_at.desc())\
+        .limit(20).all()
+
+    return jsonify({
+        'sessions': [{
+            'id':            s.id,
+            'job_role':      s.job_role      or 'Interview',
+            'interview_type':s.interview_type or 'General',
+            'experience':    s.experience    or '—',
+            'started_at':    str(s.started_at),
+            'ended_at':      str(s.ended_at) if s.ended_at else None,
+            'overall_score': s.overall_score,
+            'avg_confidence':s.avg_confidence,
+            'avg_calmness':  s.avg_calmness,
+            'total_fillers': s.total_fillers or 0,
+            'completed':     s.ended_at is not None
+        } for s in sessions]
+    }), 200

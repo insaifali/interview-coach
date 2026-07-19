@@ -140,11 +140,62 @@ async function startWebcam() {
 }
 
 // ── Audio ──────────────────────────────────────────────
+let audioAnalysisInterval = null;
+let latestSpeechScores    = { speech_score: 50, pace: 'normal', energy: 50 };
+
 async function startAudio() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    // Audio stream ready — speech recognition uses it automatically
     console.log('✅ Audio stream ready');
+
+    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    let   audioChunks   = [];
+
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      if (!audioChunks.length) return;
+
+      const blob   = new Blob(audioChunks, { type: 'audio/webm' });
+      audioChunks  = [];
+
+      // Convert to base64 and send to Flask/librosa
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result.split(',')[1];
+        try {
+          const res  = await fetch('http://127.0.0.1:5000/session/audio', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ audio: base64, session_id: sessionId })
+          });
+          const data = await res.json();
+          latestSpeechScores = data;
+
+          // Update pace indicator in UI
+          const paceEl = document.getElementById('stat-pace');
+          if (paceEl) {
+            paceEl.textContent = data.pace || 'normal';
+            paceEl.style.color = data.pace === 'fast' ? '#ff9800'
+                               : data.pace === 'slow' ? '#ff4444' : '#4caf50';
+          }
+        } catch { /* silent fail — speech analysis is supplementary */ }
+      };
+      reader.readAsDataURL(blob);
+
+      // Restart recording
+      if (mediaRecorder.state === 'inactive') mediaRecorder.start();
+    };
+
+    // Record in 5-second chunks
+    mediaRecorder.start();
+    audioAnalysisInterval = setInterval(() => {
+      if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+    }, 5000);
+
   } catch (err) {
     console.error('Audio error:', err);
   }
@@ -198,6 +249,7 @@ async function endSession() {
 
   clearInterval(timerInterval);
   clearInterval(emotionInterval);
+  clearInterval(audioAnalysisInterval);
   if (recognition) recognition.stop();
 
   try {
@@ -227,7 +279,7 @@ function sendEmotion() {
   const faceScore    = latestFaceScores.confidence  ?? 50;
   const anxietyLevel = latestFaceScores.anxiety      ?? 50;
   const engagement   = latestFaceScores.engagement   ?? 50;
-  const speechScore  = 100 - (totalFillers * 5);  // speech score from filler count
+  const speechScore = latestSpeechScores.speech_score ?? (100 - Math.min(totalFillers * 5, 50));
 
   confHistory.push(faceScore);
   calmHistory.push(100 - anxietyLevel);

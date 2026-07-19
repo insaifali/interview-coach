@@ -286,6 +286,10 @@
   </div>
   <div style="display:flex; gap:10px; align-items:center;">
     <span style="font-size:13px; color:#8b8fa8;" id="user-name"></span>
+    <a href="/history" class="btn-nav" style="background:transparent; border:1px solid #1e2130;
+       color:#8b8fa8; border-radius:8px; padding:7px 14px; font-size:13px; text-decoration:none;">
+      📋 History
+    </a>
     <button class="btn-new" onclick="window.location.href='/setup'">
       + New Session
     </button>
@@ -366,7 +370,9 @@ document.getElementById('user-name').textContent =
 window.addEventListener('DOMContentLoaded', loadDashboard);
 
 async function loadDashboard() {
-  const sessionId = localStorage.getItem('last_session_id');
+  // Support both URL param (?session_id=X) and localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get('session_id') || localStorage.getItem('last_session_id');
 
   if (!sessionId) {
     showError('No session found. Please complete an interview first.');

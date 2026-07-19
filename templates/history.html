@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Coach — Session History</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#0a0b0f; color:#fff; font-family:'Segoe UI',sans-serif; min-height:100vh; }
+
+    .header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 28px; height:56px;
+      background:#13151f; border-bottom:1px solid #1e2130;
+    }
+
+    .logo { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; }
+    .logo-icon {
+      width:28px; height:28px;
+      background:linear-gradient(135deg,#6c63ff,#a78bfa);
+      border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px;
+    }
+
+    .nav-links { display:flex; gap:8px; }
+
+    .btn-nav {
+      background:transparent; border:1px solid #1e2130; color:#8b8fa8;
+      border-radius:8px; padding:7px 14px; font-size:13px; cursor:pointer;
+      transition:all 0.2s; text-decoration:none; display:inline-flex; align-items:center;
+    }
+    .btn-nav:hover { border-color:#6c63ff; color:#fff; }
+
+    .btn-primary {
+      background:linear-gradient(135deg,#6c63ff,#8b5cf6);
+      color:#fff; border:none; border-radius:8px;
+      padding:7px 16px; font-size:13px; font-weight:600;
+      cursor:pointer; transition:opacity 0.2s; text-decoration:none;
+      display:inline-flex; align-items:center;
+    }
+    .btn-primary:hover { opacity:0.88; }
+
+    .body { max-width:1000px; margin:0 auto; padding:32px 24px; }
+
+    .page-title { margin-bottom:28px; }
+    .page-title h1 { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .page-title p  { font-size:14px; color:#8b8fa8; }
+
+    /* Stats row */
+    .stats-row {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      gap:12px; margin-bottom:24px;
+    }
+
+    .stat-card {
+      background:#13151f; border:1px solid #1e2130;
+      border-radius:12px; padding:18px;
+    }
+
+    .stat-card-label { font-size:11px; font-weight:700; color:#8b8fa8;
+      letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px; }
+    .stat-card-val   { font-size:28px; font-weight:800; }
+    .purple { color:#a78bfa; }
+    .green  { color:#4caf50; }
+    .orange { color:#ff9800; }
+
+    /* Session list */
+    .section-title {
+      font-size:11px; font-weight:700; color:#8b8fa8;
+      letter-spacing:0.08em; text-transform:uppercase;
+      margin-bottom:14px;
+    }
+
+    .session-list { display:flex; flex-direction:column; gap:10px; }
+
+    .session-card {
+      background:#13151f; border:1px solid #1e2130;
+      border-radius:12px; padding:18px 20px;
+      display:grid; grid-template-columns:1fr auto;
+      gap:16px; align-items:center;
+      cursor:pointer; transition:border-color 0.2s;
+      text-decoration:none;
+    }
+    .session-card:hover { border-color:#6c63ff; }
+
+    .session-card-left { display:flex; flex-direction:column; gap:6px; }
+
+    .session-role {
+      font-size:15px; font-weight:600; color:#fff;
+      display:flex; align-items:center; gap:8px;
+    }
+
+    .session-type-badge {
+      font-size:11px; padding:2px 8px; border-radius:20px;
+      background:rgba(108,99,255,0.12); border:1px solid rgba(108,99,255,0.25);
+      color:#a78bfa; font-weight:600;
+    }
+
+    .session-meta {
+      font-size:12px; color:#8b8fa8;
+      display:flex; align-items:center; gap:14px;
+    }
+
+    .session-meta span { display:flex; align-items:center; gap:4px; }
+
+    .session-card-right {
+      display:flex; align-items:center; gap:14px;
+    }
+
+    .score-ring {
+      width:52px; height:52px; position:relative;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    .score-ring svg { position:absolute; top:0; left:0; transform:rotate(-90deg); }
+
+    .score-ring-val {
+      font-size:13px; font-weight:800; color:#fff; position:relative; z-index:1;
+    }
+
+    .session-scores {
+      display:flex; flex-direction:column; gap:4px; text-align:right;
+    }
+
+    .mini-score {
+      font-size:11px; color:#8b8fa8;
+      display:flex; align-items:center; justify-content:flex-end; gap:6px;
+    }
+
+    .mini-score span { font-weight:700; color:#fff; }
+
+    .incomplete-badge {
+      font-size:11px; padding:3px 8px; border-radius:20px;
+      background:rgba(255,152,0,0.1); border:1px solid rgba(255,152,0,0.25);
+      color:#ff9800;
+    }
+
+    .empty-state {
+      text-align:center; padding:80px 20px; color:#8b8fa8;
+    }
+    .empty-state .icon { font-size:48px; margin-bottom:16px; }
+    .empty-state h3 { font-size:18px; color:#fff; margin-bottom:8px; }
+    .empty-state p  { font-size:14px; margin-bottom:24px; }
+
+    .loading { text-align:center; padding:60px; color:#8b8fa8; }
+    .spin {
+      width:32px; height:32px; border:3px solid #1e2130;
+      border-top-color:#6c63ff; border-radius:50%;
+      animation:spin 0.8s linear infinite; margin:0 auto 14px;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">🎯</div>
+    InterviewCoach AI
+  </div>
+  <div class="nav-links">
+    <a href="/setup"     class="btn-primary">+ New Session</a>
+    <a href="/dashboard" class="btn-nav">Last Results</a>
+  </div>
+</header>
+
+<div class="body">
+
+  <div class="page-title">
+    <h1>Session History 📋</h1>
+    <p id="user-sub">Your past interview practice sessions</p>
+  </div>
+
+  <!-- Summary stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-card-label">Total Sessions</div>
+      <div class="stat-card-val purple" id="h-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Best Score</div>
+      <div class="stat-card-val green" id="h-best">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Avg Confidence</div>
+      <div class="stat-card-val purple" id="h-conf">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Avg Calmness</div>
+      <div class="stat-card-val green" id="h-calm">—</div>
+    </div>
+  </div>
+
+  <!-- Session list -->
+  <div class="section-title">All Sessions</div>
+
+  <div id="loading" class="loading">
+    <div class="spin"></div>
+    <p>Loading your sessions...</p>
+  </div>
+
+  <div class="session-list" id="session-list" style="display:none;"></div>
+
+</div>
+
+<script>
+document.getElementById('user-sub').textContent =
+  `Welcome back, ${localStorage.getItem('user_name') || 'Student'} — here are your past sessions`;
+
+window.addEventListener('DOMContentLoaded', loadHistory);
+
+async function loadHistory() {
+  try {
+    const res  = await fetch('/api/sessions/history', { credentials:'include' });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showEmpty('Could not load sessions. Please log in again.');
+      return;
+    }
+
+    renderHistory(data.sessions);
+  } catch {
+    showEmpty('Cannot connect to server.');
+  }
+}
+
+function renderHistory(sessions) {
+  document.getElementById('loading').style.display = 'none';
+
+  if (!sessions || sessions.length === 0) {
+    showEmpty();
+    return;
+  }
+
+  // ── Summary stats ──
+  const completed  = sessions.filter(s => s.completed);
+  const scores     = completed.map(s => s.overall_score || 0).filter(s => s > 0);
+  const bestScore  = scores.length ? Math.max(...scores) : 0;
+  const avgConf    = completed.length
+    ? Math.round(completed.reduce((a,s) => a + (s.avg_confidence||0), 0) / completed.length)
+    : 0;
+  const avgCalm    = completed.length
+    ? Math.round(completed.reduce((a,s) => a + (s.avg_calmness||0), 0) / completed.length)
+    : 0;
+
+  document.getElementById('h-total').textContent = sessions.length;
+  document.getElementById('h-best').textContent  = bestScore ? bestScore + '%' : '—';
+  document.getElementById('h-conf').textContent  = avgConf   ? avgConf   + '%' : '—';
+  document.getElementById('h-calm').textContent  = avgCalm   ? avgCalm   + '%' : '—';
+
+  // ── Session cards ──
+  const list = document.getElementById('session-list');
+  list.style.display = 'flex';
+
+  list.innerHTML = sessions.map(s => {
+    const date    = new Date(s.started_at).toLocaleDateString('en-GB', {
+      day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
+    });
+    const score   = s.overall_score || 0;
+    const colour  = score >= 70 ? '#4caf50' : score >= 50 ? '#ff9800' : '#ff4444';
+    const circumf = 2 * Math.PI * 20; // r=20
+    const dash    = (score / 100) * circumf;
+
+    if (!s.completed) {
+      return `
+        <div class="session-card" style="cursor:default; opacity:0.6;">
+          <div class="session-card-left">
+            <div class="session-role">
+              ${s.job_role}
+              <span class="session-type-badge">${s.interview_type}</span>
+            </div>
+            <div class="session-meta">
+              <span>📅 ${date}</span>
+              <span>🎓 ${s.experience}</span>
+            </div>
+          </div>
+          <div class="session-card-right">
+            <span class="incomplete-badge">⏸ Incomplete</span>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <a class="session-card" href="/dashboard?session_id=${s.id}">
+        <div class="session-card-left">
+          <div class="session-role">
+            ${s.job_role}
+            <span class="session-type-badge">${s.interview_type}</span>
+          </div>
+          <div class="session-meta">
+            <span>📅 ${date}</span>
+            <span>🎓 ${s.experience}</span>
+            <span>🔤 ${s.total_fillers} fillers</span>
+          </div>
+        </div>
+        <div class="session-card-right">
+          <div class="session-scores">
+            <div class="mini-score">Confidence <span>${s.avg_confidence || 0}%</span></div>
+            <div class="mini-score">Calmness <span>${s.avg_calmness || 0}%</span></div>
+          </div>
+          <div class="score-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="20" fill="none" stroke="#1e2130" stroke-width="4"/>
+              <circle cx="26" cy="26" r="20" fill="none"
+                stroke="${colour}" stroke-width="4"
+                stroke-dasharray="${dash.toFixed(1)} ${circumf.toFixed(1)}"
+                stroke-linecap="round"/>
+            </svg>
+            <div class="score-ring-val">${score}%</div>
+          </div>
+        </div>
+      </a>`;
+  }).join('');
+}
+
+function showEmpty(msg) {
+  document.getElementById('loading').style.display = 'none';
+  const list = document.getElementById('session-list');
+  list.style.display = 'flex';
+  list.innerHTML = `
+    <div class="empty-state">
+      <div class="icon">🎯</div>
+      <h3>${msg || 'No sessions yet'}</h3>
+      <p>${msg ? '' : 'Complete your first interview session to see your history here.'}</p>
+      <a href="/setup" class="btn-primary" style="display:inline-flex;">Start First Session</a>
+    </div>`;
+}
+</script>
+</body>
+</html>
