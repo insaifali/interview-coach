@@ -295,8 +295,16 @@
     }
 
     @media (max-width: 900px) {
-      .auth-left { display: none; }
+      .auth-left  { display: none; }
       .auth-right { width: 100%; padding: 40px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .auth-right  { padding: 32px 20px; }
+      .auth-right h2 { font-size: 22px; }
+      .form-group input { padding: 11px 14px 11px 38px; }
+      .btn-primary { padding: 12px; font-size: 14px; }
+      .password-strength { gap: 3px; }
     }
   </style>
 </head>

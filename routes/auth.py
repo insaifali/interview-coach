@@ -51,3 +51,10 @@ def login():
 def logout():
     session.clear()
     return jsonify({'message': 'Logged out successfully'}), 200
+
+@auth_bp.route('/logout', methods=['GET'])
+def logout_get():
+    session.clear()
+    return redirect('/')
+
+from flask import redirect

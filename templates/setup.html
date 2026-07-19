@@ -226,6 +226,33 @@
     }
 
     .generating-box .spinner { display: block; border-top-color: #a78bfa; border-color: rgba(167,139,250,0.3); }
+
+    .header-right { display:flex; align-items:center; gap:10px; }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid #1e2130;
+      color: #8b8fa8;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-logout:hover { border-color: #ff4444; color: #ff6b6b; }
+
+    @media (max-width: 640px) {
+      .setup-header { padding: 0 16px; }
+      .setup-body   { padding: 16px; }
+      .setup-card   { padding: 24px 20px; }
+      .chips        { gap: 6px; }
+      .chip         { padding: 6px 12px; font-size: 12px; }
+      .q-count-row  { gap: 6px; }
+    }
   </style>
 </head>
 <body>
@@ -233,9 +260,12 @@
 <header class="setup-header">
   <div class="logo">
     <div class="logo-icon">🎯</div>
-    InterviewCoach AI
+    <span class="brand-name">InterviewCoach AI</span>
   </div>
-  <span style="font-size:13px; color:#8b8fa8;" id="user-greeting"></span>
+  <div class="header-right">
+    <span style="font-size:13px; color:#8b8fa8;" id="user-greeting"></span>
+    <a href="/logout" class="btn-logout">⏻ Logout</a>
+  </div>
 </header>
 
 <div class="setup-body">
