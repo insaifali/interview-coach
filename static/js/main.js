@@ -328,10 +328,10 @@ function onFaceResult(result) {
     document.getElementById('stat-conf').textContent = 'No face';
     return;
   }
-  // Store latest scores — sendEmotion() picks them up every 3s
-  latestFaceScores = result;
-
-  // Update meters immediately every frame for smooth UI
+  // DeepFace (captureAndAnalyse, every 5s) is the authoritative score sent
+  // to the backend via latestFaceScores — this geometric MediaPipe result
+  // is display-only, so it never overwrites that. Runs every frame purely
+  // to keep the meters moving smoothly between DeepFace refreshes.
   updateMeters(
     result.confidence,
     result.calmness,
