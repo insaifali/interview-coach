@@ -327,6 +327,13 @@
       </div>
     </div>
 
+    <label style="display:flex; gap:8px; align-items:flex-start; font-size:13px; color:#8b8fa8; margin:16px 0;">
+    <input type="checkbox" id="consent-check" onchange="document.getElementById('start-btn').disabled = !this.checked">
+    I consent to my webcam video and microphone audio being analysed during this session
+    for facial and speech emotion detection. This data is used only for coaching feedback
+    and is not stored beyond this session unless I choose to save my results.
+    </label>
+
     <button class="btn-start" id="start-btn" onclick="generateAndStart()">
       <div class="spinner" id="btn-spinner"></div>
       <span id="btn-text">Generate Questions & Start Session</span>

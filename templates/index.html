@@ -381,7 +381,7 @@ async function login() {
     if (res.ok) {
       localStorage.setItem('user_id',   data.user_id);
       localStorage.setItem('user_name', data.name);
-      window.location.href = '/setup';
+      window.location.href = '/dashboard';
     } else {
       showError(data.error || 'Login failed');
     }

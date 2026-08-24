@@ -10,3 +10,5 @@ class Config:
         f"@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SESSION_TYPE      = 'filesystem'
+    SESSION_PERMANENT = False

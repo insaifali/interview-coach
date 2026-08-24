@@ -55,6 +55,89 @@
 
     .btn-new:hover { opacity: 0.88; }
 
+    .btn-retake {
+      background: transparent;
+      border: 1px solid #6c63ff;
+      color: #a78bfa;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-retake:hover { background: rgba(108,99,255,0.12); }
+
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: #13151f;
+      border: 1px solid #1e2130;
+      border-radius: 14px;
+      padding: 28px;
+      width: 360px;
+      max-width: 90vw;
+    }
+
+    .modal-box h2 { font-size: 17px; margin-bottom: 6px; }
+    .modal-box p  { font-size: 13px; color: #8b8fa8; margin-bottom: 20px; }
+
+    .modal-choice {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #0f1117;
+      border: 1px solid #1e2130;
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: #fff;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .modal-choice:hover { border-color: #6c63ff; }
+    .modal-choice strong { display:block; font-size:14px; margin-bottom:3px; }
+    .modal-choice span   { font-size:12px; color:#8b8fa8; }
+
+    .modal-count-row { display:flex; gap:8px; margin-bottom:20px; }
+    .modal-count-chip {
+      flex: 1;
+      text-align: center;
+      background: #0f1117;
+      border: 1px solid #1e2130;
+      border-radius: 8px;
+      padding: 8px 0;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .modal-count-chip:hover  { border-color: #6c63ff; }
+    .modal-count-chip.active {
+      border-color: #6c63ff;
+      background: rgba(108,99,255,0.12);
+      color: #a78bfa;
+    }
+
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+    .modal-cancel {
+      background: transparent;
+      border: 1px solid #1e2130;
+      color: #8b8fa8;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
     .dash-body {
       max-width: 1100px;
       margin: 0 auto;
@@ -224,9 +307,29 @@
       border-radius: 10px;
       padding: 14px 16px;
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .q-item-top {
+      display: flex;
       align-items: flex-start;
       gap: 14px;
     }
+
+    .q-item-answer {
+      font-size: 13px;
+      color: #c7c9d9;
+      line-height: 1.5;
+      background: #13151f;
+      border: 1px solid #1e2130;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-left: 38px;
+      white-space: pre-wrap;
+    }
+
+    .q-item-answer.empty { color: #4a4d5e; font-style: italic; }
 
     .q-item-num {
       width: 24px; height: 24px;
@@ -320,6 +423,75 @@
       .score-cards { grid-template-columns: 1fr 1fr; }
       .score-card-val { font-size: 28px; }
     }
+
+    /* Coaching tips section */
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tip-card {
+      background: #0a0b0f;
+      border: 1px solid #1e2130;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .tip-card-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .tip-q-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: #a78bfa;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 20px;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+    .tip-trigger {
+      font-size: 10px;
+      color: #8b8fa8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .tip-text {
+      font-size: 13px;
+      color: #fff;
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .tip-time {
+      font-size: 11px;
+      color: #3a3d4e;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .no-tips {
+      padding: 24px;
+      text-align: center;
+      color: #8b8fa8;
+      font-size: 13px;
+    }
+
+    .tip-trigger-icon {
+      font-size: 20px;
+    }
   </style>
 </head>
 <body>
@@ -335,6 +507,9 @@
        color:#8b8fa8; border-radius:8px; padding:7px 14px; font-size:13px; text-decoration:none;">
       📋 History
     </a>
+    <button class="btn-retake" onclick="openRetakeModal()">
+      🔁 Retake Interview
+    </button>
     <button class="btn-new" onclick="window.location.href='/setup'">
       + New Session
     </button>
@@ -400,6 +575,14 @@
         <div class="q-list" id="q-list"></div>
       </div>
 
+      <!-- Coaching Tips Log -->
+    <div class="dash-card" style="margin-top:14px;">
+      <h3>Coaching Tips Received During Session</h3>
+      <div class="tips-list" id="tips-list">
+        <div class="no-tips">Loading...</div>
+      </div>
+    </div>
+
       <div class="dash-card">
         <h3>AI Feedback</h3>
         <div class="feedback-list" id="feedback-list"></div>
@@ -409,9 +592,47 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="retake-modal">
+  <div class="modal-box">
+    <h2>Retake Interview</h2>
+    <p>Restart with the same questions, or generate a new set.</p>
+
+    <div id="retake-step-choice">
+      <button class="modal-choice" onclick="retakeSameQuestions()">
+        <strong>🔁 Same Questions</strong>
+        <span>Redo this exact set from question 1</span>
+      </button>
+      <button class="modal-choice" onclick="showNewQuestionsStep()">
+        <strong>✨ New Questions</strong>
+        <span>Generate a fresh set with Ollama</span>
+      </button>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeRetakeModal()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="retake-step-count" style="display:none;">
+      <p style="margin-bottom:10px;">How many questions?</p>
+      <div class="modal-count-row">
+        <div class="modal-count-chip" onclick="selectRetakeCount(this, 3)">3</div>
+        <div class="modal-count-chip" onclick="selectRetakeCount(this, 5)">5</div>
+        <div class="modal-count-chip active" onclick="selectRetakeCount(this, 7)">7</div>
+        <div class="modal-count-chip" onclick="selectRetakeCount(this, 10)">10</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeRetakeModal()">Cancel</button>
+        <button class="btn-new" onclick="retakeNewQuestions(this)">Generate & Start</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.getElementById('user-name').textContent =
   localStorage.getItem('user_name') || 'Student';
+
+let currentSessionData = null;
+let retakeCount         = 7;
 
 window.addEventListener('DOMContentLoaded', loadDashboard);
 
@@ -421,7 +642,7 @@ async function loadDashboard() {
   const sessionId = urlParams.get('session_id') || localStorage.getItem('last_session_id');
 
   if (!sessionId) {
-    showError('No session found. Please complete an interview first.');
+    showWelcome();
     return;
   }
 
@@ -445,6 +666,8 @@ async function loadDashboard() {
 function renderDashboard(data) {
   document.getElementById('loading-state').style.display = 'none';
   document.getElementById('dash-content').style.display  = 'block';
+
+  currentSessionData = data; // needed for retake modal
 
   const s = data.session;
 
@@ -525,7 +748,28 @@ function renderDashboard(data) {
   // ── Questions list (real scores, no data = shows "No data") ──
   renderQuestions(data.questions);
 
+  function renderEmotionBreakdown(timeline) {
+  // Show how emotion changed across questions as a summary
+  if (!timeline || timeline.length === 0) return;
+
+  const avgConf = Math.round(timeline.reduce((a,e) => a + e.face_score, 0) / timeline.length);
+  const avgCalm = Math.round(timeline.reduce((a,e) => a + e.calmness,   0) / timeline.length);
+
+  // Find peak anxiety moment
+  const mostAnxious = timeline.reduce((max, e) =>
+    (100 - e.calmness) > (100 - max.calmness) ? e : max, timeline[0]);
+  const peakQ = mostAnxious.question_num;
+
+  // Update subtitle with insight
+  const meta = document.getElementById('session-meta');
+  if (meta && peakQ) {
+    meta.textContent += `  ·  Peak anxiety on Q${peakQ}`;
+  }
+}
+
   // ── AI Feedback (based on real scores) ──
+  renderTips(data.coaching_tips);
+  renderEmotionBreakdown(data.timeline);
   renderFeedback(s.avg_confidence, s.avg_calmness, s.total_fillers, s.overall_score);
 }
 
@@ -569,24 +813,78 @@ function renderQuestions(questions) {
   }
 
   qDiv.innerHTML = questions.map(q => {
+    const answerHtml = q.answer
+      ? `<div class="q-item-answer">${escapeHtml(q.answer)}</div>`
+      : `<div class="q-item-answer empty">No answer recorded.</div>`;
+
     // If no emotion data was recorded for this question
     if (q.score === null) {
       return `
         <div class="q-item">
-          <div class="q-item-num">${q.question_num}</div>
-          <div class="q-item-text">${q.question}</div>
-          <div class="q-item-score" style="background:rgba(255,255,255,0.05); color:#8b8fa8;">
-            No data
+          <div class="q-item-top">
+            <div class="q-item-num">${q.question_num}</div>
+            <div class="q-item-text">${escapeHtml(q.question)}</div>
+            <div class="q-item-score" style="background:rgba(255,255,255,0.05); color:#8b8fa8;">
+              No data
+            </div>
           </div>
+          ${answerHtml}
         </div>`;
     }
 
     const cls = q.score >= 70 ? 'score-good' : q.score >= 50 ? 'score-mid' : 'score-low';
     return `
       <div class="q-item">
-        <div class="q-item-num">${q.question_num}</div>
-        <div class="q-item-text">${q.question}</div>
-        <div class="q-item-score ${cls}">${q.score}%</div>
+        <div class="q-item-top">
+          <div class="q-item-num">${q.question_num}</div>
+          <div class="q-item-text">${escapeHtml(q.question)}</div>
+          <div class="q-item-score ${cls}">${q.score}%</div>
+        </div>
+        ${answerHtml}
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function renderTips(tips) {
+  const container = document.getElementById('tips-list');
+
+  if (!tips || tips.length === 0) {
+    container.innerHTML = `
+      <div class="no-tips">
+        ✅ No coaching tips were triggered during this session.
+        <br><span style="font-size:12px; color:#3a3d4e;">Tips fire when anxiety is high or filler words are frequent.</span>
+      </div>`;
+    return;
+  }
+
+  const triggerLabels = {
+    'high_anxiety':  { icon: '😰', label: 'High Anxiety'   },
+    'filler_words':  { icon: '🗣️', label: 'Filler Words'   },
+    'camera_error':  { icon: '📷', label: 'Camera Issue'   },
+    'general':       { icon: '💡', label: 'General Tip'    }
+  };
+
+  container.innerHTML = tips.map(t => {
+    const meta = triggerLabels[t.trigger] || triggerLabels['general'];
+    const time = new Date(t.timestamp).toLocaleTimeString('en-GB', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+
+    return `
+      <div class="tip-card">
+        <div class="tip-card-left">
+          <div class="tip-trigger-icon">${meta.icon}</div>
+          <div class="tip-q-badge">Q${t.question_num || '?'}</div>
+          <div class="tip-trigger">${meta.label}</div>
+        </div>
+        <div class="tip-text">${t.tip_text}</div>
+        <div class="tip-time">${time}</div>
       </div>`;
   }).join('');
 }
@@ -683,6 +981,24 @@ function renderFeedback(conf, calm, fillers, overall) {
   `).join('');
 }
 
+function showWelcome() {
+  const name = localStorage.getItem('user_name') || 'there';
+  document.getElementById('loading-state').innerHTML = `
+    <div style="padding:60px; text-align:center;">
+      <div style="font-size:44px; margin-bottom:16px;">👋</div>
+      <h2 style="font-size:20px; margin-bottom:8px;">Welcome, ${escapeHtml(name)}!</h2>
+      <p style="color:#8b8fa8; font-size:14px; margin-bottom:24px; max-width:360px; margin-left:auto; margin-right:auto;">
+        You haven't completed an interview yet. Run a practice session and your
+        results — confidence, calmness, filler words, and more — will show up here.
+      </p>
+      <button onclick="window.location.href='/setup'"
+        style="background:linear-gradient(135deg,#6c63ff,#8b5cf6); color:#fff; border:none;
+               border-radius:8px; padding:10px 22px; font-size:13px; font-weight:600; cursor:pointer;">
+        Start Your First Session
+      </button>
+    </div>`;
+}
+
 function showError(msg) {
   document.getElementById('loading-state').innerHTML = `
     <div style="padding:60px; text-align:center;">
@@ -697,6 +1013,86 @@ function showError(msg) {
 }
 
 function avg(arr) { return arr.reduce((a,b) => a+b, 0) / arr.length; }
+
+// ── Retake modal ─────────────────────────────────────────
+function openRetakeModal() {
+  if (!currentSessionData) return;
+  document.getElementById('retake-step-choice').style.display = 'block';
+  document.getElementById('retake-step-count').style.display  = 'none';
+  document.getElementById('retake-modal').classList.add('open');
+}
+
+function closeRetakeModal() {
+  document.getElementById('retake-modal').classList.remove('open');
+}
+
+function showNewQuestionsStep() {
+  document.getElementById('retake-step-choice').style.display = 'none';
+  document.getElementById('retake-step-count').style.display  = 'block';
+}
+
+function selectRetakeCount(el, n) {
+  document.querySelectorAll('.modal-count-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  retakeCount = n;
+}
+
+function retakeSameQuestions() {
+  const s = currentSessionData.session;
+  const questions = currentSessionData.questions
+    .slice()
+    .sort((a, b) => a.question_num - b.question_num)
+    .map(q => q.question);
+
+  if (questions.length === 0) {
+    closeRetakeModal();
+    showError('This session has no recorded questions to retake.');
+    return;
+  }
+
+  localStorage.setItem('interview_questions', JSON.stringify(questions));
+  localStorage.setItem('interview_role',      s.job_role);
+  localStorage.setItem('interview_type',      s.interview_type);
+  window.location.href = '/interview';
+}
+
+async function retakeNewQuestions(btn) {
+  const s = currentSessionData.session;
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+
+  try {
+    const res = await fetch('/api/generate-questions', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role:       s.job_role,
+        type:       s.interview_type,
+        experience: 'Fresher',
+        count:      retakeCount
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      btn.disabled = false;
+      btn.textContent = 'Generate & Start';
+      showError(data.error || 'Failed to generate questions.');
+      return;
+    }
+
+    localStorage.setItem('interview_questions', JSON.stringify(data.questions));
+    localStorage.setItem('interview_role',      s.job_role);
+    localStorage.setItem('interview_type',      s.interview_type);
+    window.location.href = '/interview';
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Generate & Start';
+    showError('Cannot connect to server. Make sure Flask and Ollama are running.');
+  }
+}
 </script>
 </body>
 </html>

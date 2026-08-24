@@ -13,6 +13,7 @@ const ROLE = localStorage.getItem('interview_role') || 'General';
 // ── State ───────────────────────────────────────────────
 let currentQ       = 0;
 let sessionId      = null;
+let questionAnswerStart = 0; // index into fullTranscript where the current question's answer begins
 let timeLeft       = 120;
 let timerInterval  = null;
 let emotionInterval= null;
@@ -24,9 +25,11 @@ let calmHistory    = [];
 let questionsAnswered = 0;
 let coachingTimeout= null;
 
+// 'um'/'uh' are deliberately absent — Chrome's Web Speech API strips
+// disfluencies from its transcript, so they'd never match here no matter
+// what. They're tracked separately from Whisper's transcript instead
+// (see updateUmUhFromWhisper), which does preserve them.
 const FILLERS = {
-  'um'        : 'f-um',
-  'uh'        : 'f-uh',
   'like'      : 'f-like',
   'you know'  : 'f-youknow',
   'basically' : 'f-basically',
@@ -51,6 +54,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   await startSession();
   startSpeech();
   emotionInterval = setInterval(sendEmotion, 3000);
+  startDeepFaceAnalysis();
 });
 
 // ── Question dots ───────────────────────────────────────
@@ -84,12 +88,32 @@ function loadQ(index) {
 }
 
 function nextQ() {
+  saveCurrentAnswer();
   if (currentQ < QUESTIONS.length - 1) {
     questionsAnswered++;
     loadQ(currentQ + 1);
   } else {
     endSession();
   }
+}
+
+// Everything spoken since the last question boundary is this question's answer
+function saveCurrentAnswer() {
+  const answer = fullTranscript.slice(questionAnswerStart).trim();
+  questionAnswerStart = fullTranscript.length;
+
+  if (!answer || !sessionId) return;
+
+  fetch('http://127.0.0.1:5000/session/answer', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      session_id:   sessionId,
+      question_num: currentQ + 1,
+      answer_text:  answer
+    })
+  }).catch(() => {});
 }
 
 function prevQ() {
@@ -135,7 +159,7 @@ async function startWebcam() {
 
   } catch (err) {
     console.error('Webcam error:', err);
-    showCoaching('⚠️', 'Camera access denied. Please allow camera and refresh.');
+    showCoaching('⚠️', 'Camera access denied. Please allow camera and refresh.', 'camera_error');
   }
 }
 
@@ -182,6 +206,20 @@ async function startAudio() {
             paceEl.style.color = data.pace === 'fast' ? '#ff9800'
                                : data.pace === 'slow' ? '#ff4444' : '#4caf50';
           }
+
+          if (data.transcript) {
+            if (recognition) {
+              // Browser SpeechRecognition owns fullTranscript (it's instant);
+              // Whisper's transcript is only consulted for um/uh, which the
+              // browser API strips out entirely.
+              updateUmUhFromWhisper(data.transcript);
+            } else {
+              // No browser STT available — Whisper is the only transcript source.
+              fullTranscript += data.transcript.trim() + ' ';
+              renderTranscript(fullTranscript);
+              updateUmUhFromWhisper(data.transcript);
+            }
+          }
         } catch { /* silent fail — speech analysis is supplementary */ }
       };
       reader.readAsDataURL(blob);
@@ -199,6 +237,86 @@ async function startAudio() {
   } catch (err) {
     console.error('Audio error:', err);
   }
+}
+
+// ── DeepFace Analysis ────────────────────────────────────
+let deepfaceInterval   = null;
+let latestDeepFace     = null;
+
+function startDeepFaceAnalysis() {
+  // Capture a frame every 5 seconds and send to DeepFace
+  deepfaceInterval = setInterval(captureAndAnalyse, 5000);
+  // Run immediately on start
+  setTimeout(captureAndAnalyse, 2000);
+}
+
+async function captureAndAnalyse() {
+  const video = document.getElementById('webcam');
+  if (!video || video.readyState < 2) return;
+
+  try {
+    // Draw current video frame to a temp canvas
+    const canvas  = document.createElement('canvas');
+    canvas.width  = 320;  // smaller = faster analysis
+    canvas.height = 240;
+    const ctx     = canvas.getContext('2d');
+
+    // Mirror to match what user sees
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert to base64 JPEG
+    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+
+    const res  = await fetch('http://127.0.0.1:5000/session/analyse-face', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ image: base64, session_id: sessionId })
+    });
+
+    const data = await res.json();
+
+    if (data.detected) {
+      latestDeepFace = data;
+
+      // Override MediaPipe scores with DeepFace scores
+      latestFaceScores = {
+        confidence: data.confidence,
+        anxiety:    data.anxiety,
+        engagement: data.engagement,
+        calmness:   data.calmness
+      };
+
+      // Show dominant emotion in UI
+      updateDominantEmotion(data.dominant, data.emotions);
+
+      console.log('DeepFace:', data.dominant, data.emotions);
+    }
+
+  } catch (err) {
+    console.warn('DeepFace analysis failed:', err);
+  }
+}
+
+function updateDominantEmotion(dominant, emotions) {
+  const el = document.getElementById('dominant-emotion');
+  if (!el) return;
+
+  const labels = {
+    happy:    { emoji: '😊', label: 'Happy',    color: '#4caf50' },
+    neutral:  { emoji: '😐', label: 'Neutral',  color: '#8b8fa8' },
+    sad:      { emoji: '😢', label: 'Sad',      color: '#6c63ff' },
+    angry:    { emoji: '😠', label: 'Angry',    color: '#ff4444' },
+    fear:     { emoji: '😰', label: 'Anxious',  color: '#ff9800' },
+    surprise: { emoji: '😲', label: 'Surprised',color: '#a78bfa' },
+    disgust:  { emoji: '😒', label: 'Tense',    color: '#ff6b6b' }
+  };
+
+  const meta      = labels[dominant] || labels['neutral'];
+  el.textContent  = `${meta.emoji} ${meta.label}`;
+  el.style.color  = meta.color;
 }
 
 // Called every frame by MediaPipe with real emotion scores
@@ -247,9 +365,12 @@ async function startSession() {
 async function endSession() {
   if (!confirm('End this session and go to dashboard?')) return;
 
+  saveCurrentAnswer(); // no-op if nextQ() already flushed this question
+
   clearInterval(timerInterval);
   clearInterval(emotionInterval);
   clearInterval(audioAnalysisInterval);
+  clearInterval(deepfaceInterval);
   if (recognition) recognition.stop();
 
   try {
@@ -272,31 +393,38 @@ function calcOverallScore() {
 }
 
 // ── Emotion data ────────────────────────────────────────
+let lastAnxietyTipAt = 0;
+
 function sendEmotion() {
   if (!sessionId) return;
 
-  // Real scores from MediaPipe face detection
-  const faceScore    = latestFaceScores.confidence  ?? 50;
-  const anxietyLevel = latestFaceScores.anxiety      ?? 50;
-  const engagement   = latestFaceScores.engagement   ?? 50;
-  const speechScore = latestSpeechScores.speech_score ?? (100 - Math.min(totalFillers * 5, 50));
+  const faceScore    = latestFaceScores.confidence ?? 50;
+  const anxietyLevel = latestFaceScores.anxiety     ?? 50;
+  const engagement   = latestFaceScores.engagement  ?? 50;
+  // If the backend explicitly told us nothing was said, don't let a stale
+  // "50" flatter the score — treat it as zero speech contribution.
+  const spoke        = latestSpeechScores.spoke !== false;
+  const speechScore  = spoke ? (latestSpeechScores.speech_score ?? 50) : 0;
 
   confHistory.push(faceScore);
   calmHistory.push(100 - anxietyLevel);
 
   updateMeters(faceScore, speechScore, anxietyLevel, engagement);
 
-  if (anxietyLevel > 72) {
+  // High-anxiety nudge — 15s cooldown so it doesn't spam every 3s once triggered
+  const now = Date.now();
+  if (anxietyLevel > 60 && now - lastAnxietyTipAt > 15000) {
+    lastAnxietyTipAt = now;
     const tips = [
       'Take a slow breath — pausing shows confidence.',
       'Slow down slightly. Speaking clearly matters more than speed.',
       'Make eye contact with the camera — it builds rapport.',
       'Use the STAR method: Situation, Task, Action, Result.'
     ];
-    showCoaching('💡', tips[Math.floor(Math.random() * tips.length)]);
+    showCoaching('💡', tips[Math.floor(Math.random() * tips.length)], 'high_anxiety');
   }
 
-  fetch('http://127.0.0.1:5000/session/emotion', {
+  fetch('/session/emotion', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     credentials:'include',
@@ -308,7 +436,10 @@ function sendEmotion() {
       filler_count:  totalFillers,
       anxiety_level: anxietyLevel,
       engagement:    engagement,
-      overall_score: Math.round((faceScore * 0.5) + ((100 - anxietyLevel) * 0.3) + (speechScore * 0.2))
+      overall_score: Math.round(
+        (faceScore * 0.30) + ((100 - anxietyLevel) * 0.20) +
+        (speechScore * 0.30) + ((100 - Math.min(totalFillers * 5, 100)) * 0.20)
+      )
     })
   }).catch(() => {});
 }
@@ -339,7 +470,8 @@ function set(id, width, label) {
 }
 
 // ── Coaching overlay ────────────────────────────────────
-function showCoaching(emoji, text) {
+function showCoaching(emoji, text, trigger = 'general') {
+  // Show in UI
   const box  = document.getElementById('coaching-inline');
   const span = document.getElementById('coaching-text');
   document.querySelector('.tip-emoji').textContent = emoji;
@@ -347,53 +479,100 @@ function showCoaching(emoji, text) {
   box.classList.add('show');
   clearTimeout(coachingTimeout);
   coachingTimeout = setTimeout(() => box.classList.remove('show'), 6000);
+
+  // Save to DB
+  if (sessionId) {
+    fetch('http://127.0.0.1:5000/session/coaching-tip', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        session_id:   sessionId,
+        question_num: currentQ + 1,
+        trigger:      trigger,
+        tip_text:     text
+      })
+    }).catch(() => {});
+  }
 }
 
 // ── Speech recognition ──────────────────────────────────
-function startSpeech() {
-  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    document.getElementById('transcript').textContent =
-      'Use Chrome for live speech transcription.';
-    return;
-  }
+let fullTranscript = ''; // accumulates FINAL speech for the whole session — survives restarts
+let lastFillerTipCount = 0;
 
-  const SR   = window.SpeechRecognition || window.webkitSpeechRecognition;
+function startSpeech() {
+  // Whisper (via /session/audio, every 5s) is now the authoritative transcript
+  // source — see mediaRecorder.onstop. The browser API below is optional and
+  // purely cosmetic: it shows words appearing live while Whisper's next chunk
+  // is still processing, so the panel doesn't look frozen for 5 seconds at a time.
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) return;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SR();
-  recognition.continuous    = true;
+  recognition.continuous     = true;
   recognition.interimResults = true;
-  recognition.lang          = 'en-US';
+  recognition.lang           = 'en-US';
 
   recognition.onresult = e => {
-    let text = '';
+    // Browser API is the sole writer to fullTranscript — it's instant (runs
+    // locally per utterance) where Whisper's 5s-chunk transcribe() lags well
+    // behind live speech. Whisper is no longer used for transcript text at
+    // all (see mediaRecorder.onstop) — only for pace/energy scoring.
+    let interim = '';
+
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      text += e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        fullTranscript += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
     }
-    renderTranscript(text);
+
+    renderTranscript(fullTranscript + interim);
   };
 
   recognition.onerror = () => {};
-  recognition.onend   = () => { try { recognition.start(); } catch {} };
+  recognition.onend   = () => { try { recognition.start(); } catch (err) {} };
   recognition.start();
 }
 
 function renderTranscript(text) {
-  // Reset counts
-  Object.keys(fillerCounts).forEach(k => fillerCounts[k] = 0);
-  totalFillers = 0;
-
   let html = text;
 
   Object.entries(FILLERS).forEach(([word, elId]) => {
     const re      = new RegExp(`\\b${word}\\b`, 'gi');
     const matches = (text.match(re) || []).length;
-    const key     = Object.keys(fillerCounts)[Object.values(FILLERS).indexOf(elId)];
+    const key     = elId.slice(2); // 'f-like' -> 'like', 'f-youknow' -> 'youknow', etc.
     fillerCounts[key] = matches;
-    totalFillers += matches;
     document.getElementById(elId).textContent = matches;
     html = html.replace(re, `<span class="filler">${word}</span>`);
   });
 
   document.getElementById('transcript').innerHTML  = html || '<span style="color:#3a3d4e;">Listening...</span>';
+  recomputeTotalFillers();
+}
+
+// um/uh never appear in the browser's transcript (Web Speech API strips
+// disfluencies), so they're counted from Whisper's transcript of the same
+// audio instead — additive per 5s chunk since Whisper chunks don't overlap.
+function updateUmUhFromWhisper(chunkText) {
+  if (!chunkText) return;
+
+  fillerCounts.um += (chunkText.match(/\bum\b/gi) || []).length;
+  fillerCounts.uh += (chunkText.match(/\buh\b/gi) || []).length;
+  document.getElementById('f-um').textContent = fillerCounts.um;
+  document.getElementById('f-uh').textContent = fillerCounts.uh;
+  recomputeTotalFillers();
+}
+
+function recomputeTotalFillers() {
+  totalFillers = Object.values(fillerCounts).reduce((a, b) => a + b, 0);
   document.getElementById('stat-fillers').textContent  = totalFillers;
   document.getElementById('total-fillers').textContent = totalFillers;
+
+  // Fire a coaching nudge every time fillers climb by 3+ since the last one
+  if (totalFillers - lastFillerTipCount >= 3) {
+    lastFillerTipCount = totalFillers;
+    showCoaching('🗣️', 'Try pausing instead of saying "um" or "like" — a brief silence reads as confidence.', 'filler_words');
+  }
 }

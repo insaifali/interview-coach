@@ -59,6 +59,7 @@ class SessionQuestion(db.Model):
     avg_anxiety     = db.Column(db.Float,   nullable=True)
     filler_count    = db.Column(db.Integer, default=0)
     answered        = db.Column(db.Boolean, default=False)
+    answer_text     = db.Column(db.Text,    nullable=True)
 
 
 # ── Emotion Events ───────────────────────────────────────────
