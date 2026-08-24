@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Coach — Live Session</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: #0a0b0f;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      background: #13151f;
+      border-bottom: 1px solid #1e2130;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .logo-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .divider-v {
+      width: 1px; height: 20px;
+      background: #1e2130;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(76,175,80,0.1);
+      border: 1px solid rgba(76,175,80,0.25);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #4caf50;
+      letter-spacing: 0.05em;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      background: #4caf50;
+      border-radius: 50%;
+      animation: blink 1.4s infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity:1; }
+      50%      { opacity:0.2; }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #8b8fa8;
+    }
+
+    .avatar {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .btn-end-session {
+      background: rgba(255,68,68,0.1);
+      border: 1px solid rgba(255,68,68,0.25);
+      color: #ff6b6b;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-end-session:hover { background: rgba(255,68,68,0.2); }
+
+    /* ── Main layout ── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Left column ── */
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    /* ── Video ── */
+    .video-wrap {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #webcam {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+
+    #face-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      transform: scaleX(-1);
+    }
+
+    /* Top-left stats */
+    .video-stats {
+      position: absolute;
+      top: 14px; left: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .v-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(10,11,15,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .v-pill-label { color: #8b8fa8; }
+    .v-pill-val   { font-weight: 600; color: #a78bfa; }
+
+    /* Top-right timer */
+    .video-timer {
+      position: absolute;
+      top: 14px; right: 14px;
+      background: rgba(10,11,15,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 8px 14px;
+      text-align: center;
+    }
+
+    .timer-label {
+      font-size: 10px;
+      color: #8b8fa8;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .timer-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-val.warn   { color: #ff9800; }
+    .timer-val.danger { color: #ff4444; }
+
+    /* Bottom coaching overlay */
+    .video-coaching {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(10,11,15,0.92));
+      padding: 32px 18px 16px;
+    }
+
+    .coaching-tip-inline {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #fff;
+      line-height: 1.5;
+      animation: slideUp 0.3s ease;
+    }
+
+    .coaching-tip-inline.show { display: flex; }
+
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .tip-emoji { font-size: 18px; flex-shrink: 0; }
+
+    /* ── Question card ── */
+    .question-card {
+      background: #13151f;
+      border: 1px solid #1e2130;
+      border-radius: 14px;
+      padding: 20px 22px;
+      flex-shrink: 0;
+    }
+
+    .q-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .q-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6c63ff;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .q-counter {
+      display: flex;
+      gap: 5px;
+    }
+
+    .q-dot {
+      width: 20px; height: 4px;
+      border-radius: 2px;
+      background: #1e2130;
+      transition: background 0.3s;
+    }
+
+    .q-dot.active    { background: #6c63ff; }
+    .q-dot.completed { background: #4caf50; }
+
+    .q-text {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    .q-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-nav {
+      background: #1e2130;
+      border: 1px solid #2a2d3e;
+      color: #8b8fa8;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-nav:hover { background: #2a2d3e; color: #fff; }
+
+    .btn-next {
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-next:hover { opacity: 0.88; }
+
+    /* ── Right panel ── */
+    .right-col {
+      background: #13151f;
+      border-left: 1px solid #1e2130;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-block {
+      padding: 16px 18px;
+      border-bottom: 1px solid #1e2130;
+      flex-shrink: 0;
+    }
+
+    .panel-block:last-child { border-bottom: none; }
+
+    .panel-heading {
+      font-size: 10px;
+      font-weight: 700;
+      color: #8b8fa8;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    /* Emotion meters */
+    .meter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .meter-row:last-child { margin-bottom: 0; }
+
+    .meter-name {
+      font-size: 12px;
+      color: #8b8fa8;
+      width: 76px;
+      flex-shrink: 0;
+    }
+
+    .meter-track {
+      flex: 1;
+      height: 5px;
+      background: #0a0b0f;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease, background 0.6s ease;
+      width: 0%;
+    }
+
+    .meter-pct {
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      width: 34px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* Transcript */
+    .transcript-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px;
+      font-size: 13px;
+      color: #8b8fa8;
+      line-height: 1.7;
+      min-height: 0;
+    }
+
+    .transcript-scroll::-webkit-scrollbar { width: 4px; }
+    .transcript-scroll::-webkit-scrollbar-track { background: transparent; }
+    .transcript-scroll::-webkit-scrollbar-thumb { background: #2a2d3e; border-radius: 2px; }
+
+    .filler { color: #ff9800; font-weight: 600; }
+    .hedge  { color: #a78bfa; font-weight: 600; font-style: italic; }
+
+    /* Filler stats row */
+    .filler-stats {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filler-chip {
+      background: #0a0b0f;
+      border: 1px solid #1e2130;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #8b8fa8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .filler-chip span {
+      color: #ff9800;
+      font-weight: 700;
+    }
+
+    /* Session stats row */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat-box {
+      background: #0a0b0f;
+      border: 1px solid #1e2130;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .stat-box-label {
+      font-size: 10px;
+      color: #8b8fa8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .stat-box-val {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-box-val.purple { color: #a78bfa; }
+    .stat-box-val.green  { color: #4caf50; }
+    .stat-box-val.orange { color: #ff9800; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">
+      <div class="logo-icon">🎯</div>
+      InterviewCoach AI
+    </div>
+    <div class="divider-v"></div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      LIVE SESSION
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="user-chip">
+      <div class="avatar" id="avatar-initials">?</div>
+      <span id="user-name">Loading...</span>
+    </div>
+    <button class="btn-end-session" onclick="endSession()">⏹ End Session</button>
+    <a href="/history" style="font-size:12px; color:#8b8fa8; text-decoration:none;">📋 History</a>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Left column -->
+  <div class="left-col">
+
+    <!-- Video -->
+    <div class="video-wrap">
+      <video id="webcam" autoplay muted playsinline></video>
+      <canvas id="face-canvas"></canvas>
+
+      <!-- Stats overlay -->
+      <div class="video-stats">
+        <div class="v-pill">
+          <span class="v-pill-label">Confidence</span>
+          <span class="v-pill-val" id="stat-conf">—</span>
+        </div>
+        <div class="v-pill">
+          <span class="v-pill-label">Fillers</span>
+          <span class="v-pill-val" id="stat-fillers">0</span>
+        </div>
+      </div>
+
+      <!-- Timer overlay -->
+      <div class="video-timer">
+        <div class="timer-label">Time Left</div>
+        <div class="timer-val" id="timer">2:00</div>
+      </div>
+
+      <!-- Coaching tip overlay -->
+      <div class="video-coaching">
+        <div class="coaching-tip-inline" id="coaching-inline">
+          <span class="tip-emoji">💡</span>
+          <span id="coaching-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question card -->
+    <div class="question-card">
+      <div class="q-meta">
+        <div class="q-label">Question <span id="q-num">1</span> of <span id="q-total">5</span></div>
+        <div class="q-counter" id="q-dots"></div>
+      </div>
+      <div class="q-text" id="q-text">Loading question...</div>
+      <div class="q-actions">
+        <button class="btn-nav"  onclick="prevQ()">← Prev</button>
+        <button class="btn-next" onclick="nextQ()">Next →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right panel -->
+  <div class="right-col">
+
+    <!-- Session stats -->
+    <div class="panel-block">
+      <div class="panel-heading">Session Stats</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-label">Avg Confidence</div>
+          <div class="stat-box-val purple" id="avg-conf">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Avg Calmness</div>
+          <div class="stat-box-val green" id="avg-calm">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Filler Words</div>
+          <div class="stat-box-val orange" id="total-fillers">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Questions Done</div>
+          <div class="stat-box-val" id="q-done">0 / 5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emotion meters -->
+    <div class="panel-block">
+      <div class="panel-heading">Emotion Analysis</div>
+
+      <!-- Dominant emotion from DeepFace -->
+      <div style="margin-bottom:14px; padding:10px 12px;
+                  background:#0a0b0f; border:1px solid #1e2130;
+                  border-radius:8px; text-align:center;">
+        <div style="font-size:10px; color:#8b8fa8; text-transform:uppercase;
+                    letter-spacing:0.08em; margin-bottom:6px;">Detected Emotion</div>
+        <div id="dominant-emotion" style="font-size:15px; font-weight:700; color:#8b8fa8;">
+          Analysing...
+        </div>
+      </div>
+
+      <div class="meter-row">
+        <div class="meter-name">Confidence</div>
+        <div class="meter-track">
+          <div class="meter-fill" id="m-conf" style="background:#6c63ff;"></div>
+        </div>
+        <div class="meter-pct" id="m-conf-val">—</div>
+      </div>
+
+      <div class="meter-row">
+        <div class="meter-name">Calmness</div>
+        <div class="meter-track">
+          <div class="meter-fill" id="m-calm" style="background:#4caf50;"></div>
+        </div>
+        <div class="meter-pct" id="m-calm-val">—</div>
+      </div>
+
+      <div class="meter-row">
+        <div class="meter-name">Anxiety</div>
+        <div class="meter-track">
+          <div class="meter-fill" id="m-anx" style="background:#ff4444;"></div>
+        </div>
+        <div class="meter-pct" id="m-anx-val">—</div>
+      </div>
+
+      <div class="meter-row">
+        <div class="meter-name">Engagement</div>
+        <div class="meter-track">
+          <div class="meter-fill" id="m-eng" style="background:#ff9800;"></div>
+        </div>
+        <div class="meter-pct" id="m-eng-val">—</div>
+      </div>
+    </div>
+
+    <!-- Filler word tracker -->
+    <div class="panel-block">
+      <div class="panel-heading">Filler Word Tracker</div>
+      <div class="filler-stats" id="filler-stats">
+        <div class="filler-chip">um <span id="f-um">0</span></div>
+        <div class="filler-chip">uh <span id="f-uh">0</span></div>
+        <div class="filler-chip">like <span id="f-like">0</span></div>
+        <div class="filler-chip">you know <span id="f-youknow">0</span></div>
+        <div class="filler-chip">basically <span id="f-basically">0</span></div>
+        <div class="filler-chip">so <span id="f-so">0</span></div>
+      </div>
+    </div>
+
+    <!-- Hedging language tracker -->
+    <div class="panel-block">
+      <div class="panel-heading">Hedging Language <span id="stat-hedging" style="color:#8b8fa8; font-weight:400;">0</span></div>
+      <div class="filler-stats" id="hedging-stats">
+        <div class="filler-chip">"I think" <span id="h-ithink">0</span></div>
+        <div class="filler-chip">"I guess" <span id="h-iguess">0</span></div>
+        <div class="filler-chip">maybe <span id="h-maybe">0</span></div>
+        <div class="filler-chip">sort of <span id="h-sortof">0</span></div>
+        <div class="filler-chip">kind of <span id="h-kindof">0</span></div>
+        <div class="filler-chip">probably <span id="h-probably">0</span></div>
+      </div>
+    </div>
+
+    <!-- Live transcript -->
+    <div class="panel-heading" style="padding:16px 18px 0; flex-shrink:0;">
+      Live Transcript
+    </div>
+    <div class="transcript-scroll" id="transcript">
+      <span style="color:#3a3d4e;">Your speech will appear here as you talk...</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- MediaPipe Face Mesh -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+<!-- Our scripts -->
+<script src="/static/js/face.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

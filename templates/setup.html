@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Coach — Session Setup</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: #0a0b0f;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .setup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 56px;
+      background: #13151f;
+      border-bottom: 1px solid #1e2130;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .logo-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    .setup-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .setup-card {
+      background: #13151f;
+      border: 1px solid #1e2130;
+      border-radius: 18px;
+      padding: 40px 44px;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .setup-card h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .setup-card > p {
+      font-size: 14px;
+      color: #8b8fa8;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .field { margin-bottom: 22px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #8b8fa8;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: #0a0b0f;
+      border: 1px solid #1e2130;
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: #fff;
+      font-size: 14px;
+      font-family: 'Segoe UI', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder { color: #3a3d4e; }
+
+    .field select option { background: #13151f; }
+
+    .field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      border: 1px solid #1e2130;
+      background: #0a0b0f;
+      color: #8b8fa8;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .chip:hover  { border-color: #6c63ff; color: #fff; }
+    .chip.active {
+      background: rgba(108,99,255,0.15);
+      border-color: #6c63ff;
+      color: #a78bfa;
+      font-weight: 600;
+    }
+
+    .q-count-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .q-count-chip {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #1e2130;
+      background: #0a0b0f;
+      color: #8b8fa8;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .q-count-chip:hover  { border-color: #6c63ff; color: #fff; }
+    .q-count-chip.active {
+      background: rgba(108,99,255,0.15);
+      border-color: #6c63ff;
+      color: #a78bfa;
+      font-weight: 700;
+    }
+
+    .btn-start {
+      width: 100%;
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-start:hover  { opacity: 0.9; }
+    .btn-start:active { transform: scale(0.99); }
+    .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      background: rgba(255,68,68,0.08);
+      border: 1px solid rgba(255,68,68,0.25);
+      color: #ff6b6b;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .generating-box {
+      background: rgba(108,99,255,0.08);
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #a78bfa;
+    }
+
+    .generating-box .spinner { display: block; border-top-color: #a78bfa; border-color: rgba(167,139,250,0.3); }
+
+    .header-right { display:flex; align-items:center; gap:10px; }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid #1e2130;
+      color: #8b8fa8;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-logout:hover { border-color: #ff4444; color: #ff6b6b; }
+
+    @media (max-width: 640px) {
+      .setup-header { padding: 0 16px; }
+      .setup-body   { padding: 16px; }
+      .setup-card   { padding: 24px 20px; }
+      .chips        { gap: 6px; }
+      .chip         { padding: 6px 12px; font-size: 12px; }
+      .q-count-row  { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="setup-header">
+  <div class="logo">
+    <div class="logo-icon">🎯</div>
+    <span class="brand-name">InterviewCoach AI</span>
+  </div>
+  <div class="header-right">
+    <span style="font-size:13px; color:#8b8fa8;" id="user-greeting"></span>
+    <a href="/logout" class="btn-logout">⏻ Logout</a>
+  </div>
+</header>
+
+<div class="setup-body">
+  <div class="setup-card">
+    <h1>Set up your interview session</h1>
+    <p>Tell us about the role you're preparing for. Ollama AI will generate personalised questions based on your input.</p>
+
+    <div class="error-box" id="error-box"></div>
+
+    <!-- Job Role -->
+    <div class="field">
+      <label>Job Role / Position</label>
+      <input type="text" id="job-role" placeholder="e.g. Software Engineer, Data Analyst, Marketing Manager">
+    </div>
+
+    <!-- Company / Industry -->
+    <div class="field">
+      <label>Company or Industry (optional)</label>
+      <input type="text" id="company" placeholder="e.g. Google, Healthcare, Finance Startup">
+    </div>
+
+    <!-- Experience Level -->
+    <div class="field">
+      <label>Your Experience Level</label>
+      <div class="chips" id="exp-chips">
+        <div class="chip active" onclick="selectChip('exp', this)">Fresher / Graduate</div>
+        <div class="chip" onclick="selectChip('exp', this)">1–2 Years</div>
+        <div class="chip" onclick="selectChip('exp', this)">3–5 Years</div>
+        <div class="chip" onclick="selectChip('exp', this)">5+ Years</div>
+      </div>
+    </div>
+
+    <!-- Interview Type -->
+    <div class="field">
+      <label>Interview Type</label>
+      <div class="chips" id="type-chips">
+        <div class="chip active" onclick="selectChip('type', this)">General HR</div>
+        <div class="chip" onclick="selectChip('type', this)">Technical</div>
+        <div class="chip" onclick="selectChip('type', this)">Behavioural</div>
+        <div class="chip" onclick="selectChip('type', this)">Case Study</div>
+        <div class="chip" onclick="selectChip('type', this)">Mixed</div>
+      </div>
+    </div>
+
+    <!-- Key Skills -->
+    <div class="field">
+      <label>Key Skills to Focus On (optional)</label>
+      <input type="text" id="skills" placeholder="e.g. Python, leadership, communication, SQL">
+    </div>
+
+    <!-- Number of Questions -->
+    <div class="field">
+      <label>Number of Questions</label>
+      <div class="q-count-row">
+        <div class="q-count-chip" onclick="selectQCount(this, 3)">3</div>
+        <div class="q-count-chip" onclick="selectQCount(this, 5)">5</div>
+        <div class="q-count-chip active" onclick="selectQCount(this, 7)">7</div>
+        <div class="q-count-chip" onclick="selectQCount(this, 10)">10</div>
+      </div>
+    </div>
+
+    <label style="display:flex; gap:8px; align-items:flex-start; font-size:13px; color:#8b8fa8; margin:16px 0;">
+    <input type="checkbox" id="consent-check" onchange="document.getElementById('start-btn').disabled = !this.checked">
+    I consent to my webcam video and microphone audio being analysed during this session
+    for facial and speech emotion detection. This data is used only for coaching feedback
+    and is not stored beyond this session unless I choose to save my results.
+    </label>
+
+    <button class="btn-start" id="start-btn" onclick="generateAndStart()">
+      <div class="spinner" id="btn-spinner"></div>
+      <span id="btn-text">Generate Questions & Start Session</span>
+    </button>
+
+    <div class="generating-box" id="gen-box">
+      <div class="spinner"></div>
+      <span id="gen-status">Connecting to Ollama AI...</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedExp      = 'Fresher / Graduate';
+  let selectedType     = 'General HR';
+  let selectedQCount   = 7;
+
+  document.getElementById('user-greeting').textContent =
+    'Hello, ' + (localStorage.getItem('user_name') || 'Student');
+
+  function selectChip(group, el) {
+    const parent = el.parentElement;
+    parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    if (group === 'exp')  selectedExp  = el.textContent;
+    if (group === 'type') selectedType = el.textContent;
+  }
+
+  function selectQCount(el, n) {
+    document.querySelectorAll('.q-count-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    selectedQCount = n;
+  }
+
+  async function generateAndStart() {
+    const role    = document.getElementById('job-role').value.trim();
+    const company = document.getElementById('company').value.trim();
+    const skills  = document.getElementById('skills').value.trim();
+
+    if (!role) { showError('Please enter the job role you are preparing for.'); return; }
+
+    setLoading(true);
+    showGenerating('Connecting to Ollama AI...');
+
+    try {
+      const res = await fetch('/api/generate-questions', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role, company, skills,
+          experience: selectedExp,
+          type:       selectedType,
+          count:      selectedQCount
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) { showError(data.error || 'Failed to generate questions.'); setLoading(false); return; }
+
+      // Store questions for interview page
+      localStorage.setItem('interview_questions',  JSON.stringify(data.questions));
+      localStorage.setItem('interview_role',       role);
+      localStorage.setItem('interview_type',       selectedType);
+      localStorage.setItem('interview_company',    company);
+      localStorage.setItem('interview_exp',        selectedExp);
+      localStorage.setItem('interview_skills',     skills);
+
+      showGenerating(`✅ ${data.questions.length} questions ready! Starting session...`);
+      setTimeout(() => { window.location.href = '/interview'; }, 1000);
+
+    } catch (err) {
+      showError('Cannot connect to server. Make sure Flask and Ollama are running.');
+      setLoading(false);
+    }
+  }
+
+  function setLoading(on) {
+    const btn     = document.getElementById('start-btn');
+    const spinner = document.getElementById('btn-spinner');
+    const text    = document.getElementById('btn-text');
+    btn.disabled        = on;
+    spinner.style.display = on ? 'block' : 'none';
+    text.textContent    = on ? 'Generating...' : 'Generate Questions & Start Session';
+  }
+
+  function showGenerating(msg) {
+    const box = document.getElementById('gen-box');
+    document.getElementById('gen-status').textContent = msg;
+    box.style.display = 'flex';
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-box');
+    box.textContent    = '⚠️ ' + msg;
+    box.style.display  = 'block';
+    document.getElementById('gen-box').style.display = 'none';
+  }
+</script>
+</body>
+</html>

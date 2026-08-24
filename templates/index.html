@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Coach — Login</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .auth-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Left branding panel */
+    .auth-left {
+      flex: 1;
+      background: linear-gradient(135deg, #1a1040 0%, #0f1117 60%, #1a2040 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      border-radius: 50%;
+    }
+
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(108,99,255,0.1) 0%, transparent 70%);
+      bottom: -50px;
+      right: -50px;
+      border-radius: 50%;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+
+    .auth-left h1 {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-left h1 span {
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .auth-left p {
+      font-size: 16px;
+      color: #8b8fa8;
+      line-height: 1.7;
+      max-width: 400px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-list {
+      margin-top: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .feature-dot {
+      width: 32px;
+      height: 32px;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .feature-item span {
+      font-size: 14px;
+      color: #8b8fa8;
+    }
+
+    .feature-item span strong {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    /* Right form panel */
+    .auth-right {
+      width: 480px;
+      background: #13151f;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 48px;
+      border-left: 1px solid #1e2130;
+    }
+
+    .auth-right h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .auth-right > p {
+      font-size: 14px;
+      color: #8b8fa8;
+      margin-bottom: 36px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8b8fa8;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.5;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #1e2130;
+      border-radius: 10px;
+      padding: 13px 16px 13px 42px;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+    }
+
+    .form-group input::placeholder { color: #3a3d4e; }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 8px;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary:hover   { opacity: 0.9; }
+    .btn-primary:active  { transform: scale(0.99); }
+
+    .btn-primary.loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .divider hr {
+      flex: 1;
+      border: none;
+      border-top: 1px solid #1e2130;
+    }
+
+    .divider span {
+      font-size: 12px;
+      color: #3a3d4e;
+    }
+
+    .auth-switch {
+      text-align: center;
+      font-size: 13px;
+      color: #8b8fa8;
+    }
+
+    .auth-switch a {
+      color: #6c63ff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .auth-switch a:hover { text-decoration: underline; }
+
+    .error-msg {
+      background: rgba(255,68,68,0.08);
+      border: 1px solid rgba(255,68,68,0.25);
+      color: #ff6b6b;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Hide left panel on small screens */
+    @media (max-width: 900px) {
+      .auth-left  { display: none; }
+      .auth-right { width: 100%; padding: 40px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .auth-right { padding: 32px 20px; }
+      .auth-right h2 { font-size: 22px; }
+      .form-group input { padding: 11px 14px 11px 38px; }
+      .btn-primary { padding: 12px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+
+  <!-- Left branding -->
+  <div class="auth-left">
+    <div class="brand-logo">
+      <div class="brand-icon">🎯</div>
+      <span class="brand-name">InterviewCoach AI</span>
+    </div>
+
+    <h1>Ace your next<br><span>interview</span> with AI</h1>
+    <p>Real-time emotion analysis and personalised coaching to help you present your best self.</p>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-dot">🧠</div>
+        <span><strong>Facial emotion detection</strong> — tracks confidence and anxiety live</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot">🎙️</div>
+        <span><strong>Speech analysis</strong> — detects filler words and speaking pace</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot">💡</div>
+        <span><strong>AI coaching tips</strong> — personalised nudges as you answer</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot">📊</div>
+        <span><strong>Progress dashboard</strong> — track improvement across sessions</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right form -->
+  <div class="auth-right">
+    <h2>Welcome back</h2>
+    <p>Sign in to continue your practice sessions</p>
+
+    <div class="error-msg" id="error-msg">⚠️ <span id="error-text"></span></div>
+
+    <div class="form-group">
+      <label>Email address</label>
+      <div class="input-wrap">
+        <span class="input-icon">✉️</span>
+        <input type="email" id="email" placeholder="you@email.com" autocomplete="email">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+    </div>
+
+    <button class="btn-primary" id="login-btn" onclick="login()">Sign In</button>
+
+    <div class="divider">
+      <hr><span>or</span><hr>
+    </div>
+
+    <div class="auth-switch">
+      Don't have an account? <a href="/register">Create one free</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+async function login() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const btn      = document.getElementById('login-btn');
+
+  if (!email || !password) { showError('Please fill in all fields'); return; }
+
+  btn.textContent = 'Signing in...';
+  btn.classList.add('loading');
+
+  try {
+    const res  = await fetch('http://127.0.0.1:5000/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('user_id',   data.user_id);
+      localStorage.setItem('user_name', data.name);
+      window.location.href = '/dashboard';
+    } else {
+      showError(data.error || 'Login failed');
+    }
+  } catch {
+    showError('Cannot connect to server. Is Flask running?');
+  } finally {
+    btn.textContent = 'Sign In';
+    btn.classList.remove('loading');
+  }
+}
+
+function showError(msg) {
+  const box  = document.getElementById('error-msg');
+  document.getElementById('error-text').textContent = msg;
+  box.style.display = 'flex';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+
+</body>
+</html>
